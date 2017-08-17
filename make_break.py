@@ -43,12 +43,26 @@ class DbgConfig(object):
     def add_executable(self, filename):
         """Add executable to debug configuration"""
         filename = canon_path(filename)
+        self.set_last_used(filename)
         if filename not in self._data.keys():
             self._data[filename] = {"Breakpoints": {}}
 
+    def get_last_used(self):
+        """Return last executable debugged or configured"""
+        return self._data.get("LASTUSED", None)
+
+    def set_last_used(self, executable):
+        """Return last executable debugged or configured"""
+        executable = canon_path(executable)
+        self._data["LASTUSED"] = executable
+
     def toggle_breakpoint(self, executable, source_file, line):
         source_file = os.path.split(source_file)[1]
-        executable = canon_path(executable)
+        if executable is None:
+            executable = self.get_last_used()
+        else:
+            executable = canon_path(executable)
+            self.set_last_used(executable)
         self.add_executable(executable)
         try:
             breakpoints = self._data[executable]["Breakpoints"][source_file]
@@ -72,10 +86,13 @@ class DbgConfig(object):
 
         .. warn:: Must run export_commands first
         """
+        if executable is None:
+            executable = self.get_last_used()
         command_filename = os.path.join(
             self.dbg_directory, "{}.lldb".format(raw_name(executable))
         )
         executable = canon_path(executable)
+        self.set_last_used(executable)
         if executable in self._data:
             subprocess.call(["lldb", "-S", command_filename])
         else:
@@ -84,6 +101,8 @@ class DbgConfig(object):
     def export_commands(self):
         """Export commands to files suitable for loading with lldb -S"""
         for filename in self._data.keys():
+            if not os.path.isfile(filename):
+                continue
             commands = []
             commands.append("file {}".format(filename))
             for source_file, lines in self._data[
@@ -112,17 +131,20 @@ if __name__ == "__main__":
     # TODO: Specify config file location
     # TODO: Verbose output
 
-    start_parser = subparsers.add_parser('start', help="start debugger")
-    start_parser.add_argument(
-        'executable', metavar='EXECUTABLE', help="executable to be debugged"
+    # start_parser = subparsers.add_parser('start', help="start debugger")
+    parser.add_argument(
+        '-x', '--executable', metavar='EXECUTABLE', default=None,
+        help="executable to be debugged (last used if omitted)"
     )
-    start_parser.set_defaults(command="start")
+    parser.set_defaults(command="start")
 
+    # TODO: Other ways of specifying breakpoints
     break_parser = subparsers.add_parser(
         'break', aliases=["b"], help="toggle breakpoint"
     )
     break_parser.add_argument(
-        'executable', metavar='EXECUTABLE', help="executable to be debugged"
+        '-x', '--executable', metavar='EXECUTABLE', default=None,
+        help="executable to be debugged (last used if omitted)"
     )
     break_parser.add_argument(
         'source', metavar='SOURCE', help="source file for breakpoint"
@@ -130,20 +152,41 @@ if __name__ == "__main__":
     break_parser.add_argument(
         'line', metavar='LINE', help="line number for breakpoint"
     )
-    # TODO: Other ways of specifying breakpoints
     break_parser.set_defaults(command="break")
 
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit(1)
+    clean_parser = subparsers.add_parser(
+        'clean', help="clean out config file (ERASES CURRENT CONFIG)"
+    )
+    clean_parser.set_defaults(command="clean")
+
+    touch_parser = subparsers.add_parser(
+        'touch', aliases=['t'], help="set last used executable"
+    )
+    touch_parser.add_argument(
+        'executable', metavar='EXECUTABLE', default=None,
+        help="executable to be debugged (last used if omitted)"
+    )
+    touch_parser.set_defaults(command="touch")
+
     args = parser.parse_args(sys.argv[1:])
 
     config = DbgConfig()
     config.load()
+    if args.executable is None and config.get_last_used() is None:
+        parser.print_help()
+        sys.exit(1)
+
     if args.command == "start":
         config.debug(args.executable)
     elif args.command == "break":
-        config.toggle_breakpoint(args.executable, args.source, args.line)
+        config.toggle_breakpoint(
+            args.executable, args.source, args.line
+        )
+        config.save()
+    elif args.command == "clean":
+        os.remove(config.config_filename)
+    elif args.command == "touch":
+        config.set_last_used(args.executable)
         config.save()
     else:
         parser.print_help()
