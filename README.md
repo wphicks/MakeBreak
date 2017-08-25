@@ -3,7 +3,7 @@
 *MakeBreak* is a tool for saving breakpoints and other debugger information for
 [lldb](https://lldb.llvm.org/) between sessions. It currently provides a
 command line interface for setting persistent breakpoints. Eventually, it will
-will be able to save breakpoints from within the lldb interface and provide a
+be able to save breakpoints from within the lldb interface and will provide a
 plugin for vim integration.
 
 ##Basic Usage

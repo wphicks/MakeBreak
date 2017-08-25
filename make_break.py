@@ -44,6 +44,14 @@ class DbgConfig(object):
         self._data = {}
         self.load()
 
+    def clean(self):
+        """Remove config file and lldb files from debug directory"""
+        self._data = {}
+        os.remove(self.config_filename)
+        for file_ in os.scandir(self.dbg_directory):
+            if file_.name.endswith(".lldb"):
+                os.remove(file_.path)
+
     def load(self):
         """Load data from config file"""
         try:
@@ -197,6 +205,11 @@ if __name__ == "__main__":
     )
     print_parser.set_defaults(command="print")
 
+    build_parser = subparsers.add_parser(
+        'build', help="rebuild lldb files from config"
+    )
+    build_parser.set_defaults(command="build")
+
     args = parser.parse_args(sys.argv[1:])
 
     config = DbgConfig()
@@ -213,12 +226,14 @@ if __name__ == "__main__":
         )
         config.save()
     elif args.command == "clean":
-        os.remove(config.config_filename)
+        config.clean()
     elif args.command == "touch":
         config.set_last_used(args.executable)
         config.save()
     elif args.command == "print":
         config.print_breakpoints(args.executable)
+    elif args.command == "build":
+        config.export_commands()
     else:
         parser.print_help()
         sys.exit(1)
