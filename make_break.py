@@ -104,6 +104,10 @@ class DbgConfig(object):
     def print_breakpoints(self, executable):
         if executable is None:
             executable = self.get_last_used()
+        exec_str = "Executable: {}".format(os.path.basename(executable))
+        # TODO: Verbose should print full pathname
+        print(exec_str)
+        print("-" * len(exec_str))
         for source_file, lines in self._data[
                 executable]["Breakpoints"].items():
             for line_ in lines:
