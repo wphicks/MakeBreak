@@ -1,21 +1,21 @@
-#MakeBreak
+# MakeBreak
 
-*MakeBreak* is a tool for saving breakpoints and other debugger information for
+MakeBreak is a tool for saving breakpoints and other debugger information for
 [lldb](https://lldb.llvm.org/) between sessions. It currently provides a
 command line interface for setting persistent breakpoints. Eventually, it will
 be able to save breakpoints from within the lldb interface and will provide a
 plugin for vim integration.
 
-##Basic Usage
-All of the functionality of *MakeBreak* is currently in makebreak.py. To set a
+## Basic Usage
+All of the functionality of MakeBreak is currently in `make_break.py`. To set a
 persistent breakpoint, run:
 
 ```bash
 >> ./make_break.py break -x path/to/myExecutable mySourceFile.c 5
 ```
 This will set a breakpoint at line 5 of mySourceFile.c when debugging
-myExecutable (or remove it if it is already present). If the executable name is
-omitted, it will default to the last executable used by *MakeBreak*. (The `mb
+`myExecutable` (or unset it if it is already present). If the executable name is
+omitted, it will default to the last executable used by MakeBreak. (The `mb
 touch` command is provided to allow you to set the "last used" executable
 without adding a breakpoint.) Thus, we can now simply run:
 
@@ -34,9 +34,9 @@ mySourceFile.c:5
 Again, -x can be used, but if omitted will default to the last touched
 executable.
 
-##Editor Integration
+## Editor Integration
 While I hope to create a real vim plugin to provide a convenient interface to
-*MakeBreak*, a little tweak of your `.vimrc` can provide basic usage already.
+MakeBreak, a little tweak of your `.vimrc` can provide basic usage already.
 For instance, I have `make_break.py` aliased to `mb` and the following lines in
 my `.vimrc`.
 
@@ -53,11 +53,11 @@ nnoremap <Leader>B :call ToggleBreakPoint()<CR> :redraw!<CR>
 ```
 
 If I'm editing `myExecutable.cpp`, pressing `F7` will bring up a command to set
-the current *MakeBreak* executable. It defaults to `build/myExecutable`, but
+the current MakeBreak executable. It defaults to `build/myExecutable`, but
 you can change this before hitting enter. Pressing `<Leader>B` will toggle a
 breakpoint at the current line. You can then run `mb` in another window, and
 you will begin debugging of the selected executable with the given breakpoints.
 
-##Contributions
-Pull requests welcome! *MakeBreak* is licensed under GPLv3. Hack away, and
+## Contributions
+Pull requests welcome! MakeBreak is licensed under GPLv3. Hack away, and
 happy debugging!
