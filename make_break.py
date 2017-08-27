@@ -101,6 +101,15 @@ class DbgConfig(object):
         else:
             breakpoints.append(line)
 
+    def clean_breakpoints(self, executable):
+        """Remove all breakpoints for given executable"""
+        if executable is None:
+            executable = self.get_last_used()
+        for source_file, lines in self._data[
+                executable]["Breakpoints"].items():
+            for line_ in reversed(lines):
+                self.toggle_breakpoint(executable, source_file, line_)
+
     def print_breakpoints(self, executable):
         if executable is None:
             executable = self.get_last_used()
@@ -108,10 +117,13 @@ class DbgConfig(object):
         # TODO: Verbose should print full pathname
         print(exec_str)
         print("-" * len(exec_str))
-        for source_file, lines in self._data[
-                executable]["Breakpoints"].items():
-            for line_ in lines:
-                print("{}:{}".format(source_file, line_))
+        try:
+            for source_file, lines in self._data[
+                    executable]["Breakpoints"].items():
+                for line_ in lines:
+                    print("{}:{}".format(source_file, line_))
+        except KeyError:  # Executable touched but not added to config yet
+            pass
 
     def debug(self, executable):
         """Launch debugging session
@@ -187,7 +199,15 @@ if __name__ == "__main__":
     break_parser.set_defaults(command="break")
 
     clean_parser = subparsers.add_parser(
-        'clean', help="clean out config file (ERASES CURRENT CONFIG)"
+        'clean', help="remove existing breakpoints for current executable"
+    )
+    clean_parser.add_argument(
+        '-a', '--all', default=False, action="store_true",
+        help="completely delete config file (ERASES CURRENT CONFIG)"
+    )
+    clean_parser.add_argument(
+        '-x', '--executable', metavar='EXECUTABLE', default=None,
+        help="executable to be debugged (last used if omitted)"
     )
     clean_parser.set_defaults(command="clean")
 
@@ -230,7 +250,11 @@ if __name__ == "__main__":
         )
         config.save()
     elif args.command == "clean":
-        config.clean()
+        if args.all:
+            config.clean()
+        else:
+            config.clean_breakpoints(args.executable)
+            config.save()
     elif args.command == "touch":
         config.set_last_used(args.executable)
         config.save()
