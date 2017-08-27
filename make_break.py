@@ -175,7 +175,6 @@ if __name__ == "__main__":
     # TODO: Specify config file location
     # TODO: Verbose output
 
-    # start_parser = subparsers.add_parser('start', help="start debugger")
     parser.add_argument(
         '-x', '--executable', metavar='EXECUTABLE', default=None,
         help="executable to be debugged (last used if omitted)"

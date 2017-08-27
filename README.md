@@ -20,7 +20,7 @@ touch` command is provided to allow you to set the "last used" executable
 without adding a breakpoint.) Thus, we can now simply run:
 
 ```bash
->> ./make_break.py start
+>> ./make_break.py
 ```
 
 and lldb will begin debugging myExecutable with any previously set breakpoints.
