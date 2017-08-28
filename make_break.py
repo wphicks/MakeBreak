@@ -21,7 +21,6 @@ import os
 import sys
 import json
 import argparse
-import subprocess
 
 
 def raw_name(filename):
@@ -138,9 +137,9 @@ class DbgConfig(object):
         executable = canon_path(executable)
         self.set_last_used(executable)
         if executable in self._data:
-            subprocess.call(["lldb", "-S", command_filename])
+            os.execvp("lldb", ["lldb", "-S", command_filename])
         else:
-            subprocess.call(["lldb", executable])
+            os.execvp("lldb", ["lldb", executable])
 
     def export_commands(self):
         """Export commands to files suitable for loading with lldb -S"""
